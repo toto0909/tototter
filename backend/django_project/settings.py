@@ -9,8 +9,10 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
+#jwtトークンの有効期限
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,12 +33,20 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # Local apps
+    'api.apps.ApiConfig',
+    # Third party apps
+    'rest_framework',
+    'djoser',
+    'corsheaders',
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
 ]
 
 MIDDLEWARE = [
@@ -47,6 +57,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Third party apps
+    'corsheaders.middleware.CorsMiddleware', 
+]
+
+#ReactとのCROS対策
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000'
 ]
 
 ROOT_URLCONF = 'django_project.urls'
@@ -80,6 +97,29 @@ DATABASES = {
     }
 }
 
+#認証関係の設定
+REST_FRAMEWORK = {
+    #認証済みユーザーだけが閲覧できるようにする
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    #デフォルトの認証方法設定
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    ]
+}
+
+#simplejwtの設定(1440分(1日)でトークン切れ)
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES' : ('JWT',),
+    'ACCESS_TOKEN_LIFETIME' : timedelta(minutes=1440)
+}
+
+#TODO 外部ストレージに保存先を変更したら削除
+#画像格納先(今回はプロジェクト内) => urls.pyからアクセス出来るようにする
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -103,9 +143,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+#カスタムユーザーモデル
+AUTH_USER_MODEL = 'api.User'
 
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'ja'
+
+TIME_ZONE = 'Asia/Tokyo'
 
 USE_I18N = True
 
